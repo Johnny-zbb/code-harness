@@ -1,0 +1,16 @@
+{
+  "name": "example-two-independent-tasks",
+  "baseRef": "HEAD",
+  "tasks": [
+    {
+      "id": "task-a",
+      "title": "Implement isolated feature A",
+      "prompt": "Implement feature A with the smallest change. Use the repository verification skill and leave concrete evidence that the behavior works."
+    },
+    {
+      "id": "task-b",
+      "title": "Add independent regression coverage B",
+      "prompt": "Add regression coverage for behavior B without depending on task A. Run the relevant checks and keep the change scoped."
+    }
+  ]
+}

@@ -29,6 +29,12 @@ Create a project-local verification harness that can launch, drive, observe, and
 
 Maintain verification coverage as projects evolve. Detect stale feature maps, missing drivers, and harness gaps.
 
+### multi-agent-orchestrator
+
+MVP coordinator for running up to two independent coding agents in isolated git worktrees, followed by optional independent verification and deterministic checks.
+
+It intentionally stops before automatic branch integration. The first goal is to make parallel work observable and trustworthy before adding more autonomy.
+
 ## Philosophy
 
 A coding agent should not only write code.

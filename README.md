@@ -33,6 +33,17 @@ Maintain verification coverage as projects evolve. Detect stale feature maps, mi
 
 MVP coordinator for running up to two independent coding agents in isolated git worktrees, followed by optional independent verification and deterministic checks.
 
+A Codex CLI adapter is included so the common path is:
+
+```bash
+node skills/multi-agent-orchestrator/adapters/codex.mjs run \
+  --repo /path/to/repo \
+  --plan ./plan.json \
+  --check-command "npm test"
+```
+
+The adapter preserves Codex JSONL events beside the normal pstack-style evidence, which makes the execution state consumable by a future BoardUI/GrokBot front end.
+
 It intentionally stops before automatic branch integration. The first goal is to make parallel work observable and trustworthy before adding more autonomy.
 
 ## Philosophy

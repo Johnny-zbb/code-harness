@@ -14,9 +14,9 @@ Default to one agent when one session can complete the work reliably. Multi-agen
 1. Ground the request in the target repository.
 2. Decide whether the work can be split into one or two independent tasks.
 3. Write a plan JSON using the schema in `examples/plan.example.json`.
-4. Run `orchestrate.mjs` with a worker command.
+4. Run `orchestrate.mjs` directly, or use the Codex adapter for the common Codex CLI path.
 5. Prefer a separate verifier command so the verifier does not inherit the worker's assumptions.
-6. Inspect `run.json`, worker/verifier logs, git status, and diff evidence before integrating anything.
+6. Inspect `run.json`, worker/verifier logs, git status, diff evidence, and adapter event streams before integrating anything.
 7. Keep the worktrees for review. This MVP does not merge branches automatically.
 
 ## Routing rules
@@ -37,7 +37,7 @@ Use two tasks only when:
 
 Do not encode dependencies in the plan. This MVP rejects `dependsOn` because dependent work requires integration semantics that are intentionally out of scope.
 
-## Commands
+## Generic commands
 
 ```bash
 node skills/multi-agent-orchestrator/orchestrate.mjs doctor --repo /path/to/repo
@@ -66,6 +66,30 @@ node skills/multi-agent-orchestrator/orchestrate.mjs run \
 
 The worker and verifier prompts are sent on stdin. The CLI also exposes prompt-file and evidence paths through environment variables so an adapter can ignore stdin if necessary.
 
+## Codex adapter
+
+Check that Codex is available:
+
+```bash
+node skills/multi-agent-orchestrator/adapters/codex.mjs doctor
+```
+
+Run the plan with Codex workers and an independent Codex verifier:
+
+```bash
+node skills/multi-agent-orchestrator/adapters/codex.mjs run \
+  --repo /path/to/repo \
+  --plan ./plan.json \
+  --check-command "npm test" \
+  --max-parallel 2
+```
+
+Add `--no-verifier` when you only want the coding workers.
+
+The adapter invokes Codex non-interactively with workspace-write sandboxing, no approval prompts, JSONL output, and the task prompt on stdin. It intentionally uses the global approval flag before `exec` for compatibility with Codex CLI versions where the post-subcommand form is rejected.
+
+Set `CODEX_BIN` to override the Codex executable path.
+
 ## Evidence contract
 
 Each task keeps:
@@ -75,6 +99,8 @@ Each task keeps:
 - `worker.log`
 - `verifier.log` when configured
 - `check.log` when configured
+- `worker-events.jsonl` when using the Codex adapter
+- `verifier-events.jsonl` when using the Codex adapter
 - `git-status.txt`
 - `git-diff-stat.txt`
 - `git-diff.patch`
@@ -91,4 +117,4 @@ The coordinator must not invent parallelism. If the split is ambiguous, choose o
 
 ## Integration boundary
 
-This is the execution kernel for a future GrokBot / BoardUI front end. UI concerns such as agent cards, chat streams, approvals, and marketplace configuration stay outside this skill. The UI should consume the run/task state rather than own orchestration semantics.
+This is the execution kernel for a future GrokBot / BoardUI front end. UI concerns such as agent cards, chat streams, approvals, and marketplace configuration stay outside this skill. The UI should consume `run.json` and JSONL agent events rather than own orchestration semantics.

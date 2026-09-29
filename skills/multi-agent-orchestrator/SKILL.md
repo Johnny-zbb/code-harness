@@ -117,4 +117,4 @@ The coordinator must not invent parallelism. If the split is ambiguous, choose o
 
 ## Integration boundary
 
-This is the execution kernel for a future GrokBot / BoardUI front end. UI concerns such as agent cards, chat streams, approvals, and marketplace configuration stay outside this skill. The UI should consume `run.json` and JSONL agent events rather than own orchestration semantics.
+This is the execution kernel for the control-plane UI (`apps/control-plane`). UI concerns such as agent cards, chat streams, approvals, and marketplace configuration stay outside this skill. The UI should consume `run.json` and JSONL agent events rather than own orchestration semantics.

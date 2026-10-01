@@ -14,4 +14,5 @@
     "noEmit": true
   },
   "include": ["src", "vite.config.mts"]
+  ,"exclude": ["src/components/boardui/base/date-picker/**"]
 }

@@ -14,8 +14,10 @@
     "test": "node --test \"tests/*.test.mjs\""
   },
   "dependencies": {
+    "@internationalized/date": "^3.12.1",
     "@remixicon/react": "^4.9.0",
     "@tailwindcss/postcss": "^4.3.3",
+    "motion": "^12.42.2",
     "react": "^19.2.4",
     "react-aria-components": "^1.21.1",
     "react-dom": "^19.2.4",

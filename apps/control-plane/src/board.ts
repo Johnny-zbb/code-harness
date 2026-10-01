@@ -1,4 +1,5 @@
 export type BoardStatus =
+  | "backlog"
   | "queued"
   | "running"
   | "verifying"
@@ -37,6 +38,7 @@ export interface BoardTask {
   targetBranch: string;
   checkCommand: string;
   status: BoardStatus;
+  priority?: "low" | "medium" | "high" | "urgent";
   createdAt: string;
   updatedAt: string;
   branch?: string;
@@ -61,6 +63,7 @@ export const boardStatus: Record<
     color: "soft" | "blue" | "purple" | "yellow" | "lime" | "rose";
   }
 > = {
+  backlog: { label: "待规划", color: "soft" },
   queued: { label: "待办", color: "soft" },
   running: { label: "开发中", color: "blue" },
   verifying: { label: "验证中", color: "purple" },
@@ -69,6 +72,12 @@ export const boardStatus: Record<
   merged: { label: "已合入", color: "lime" },
   blocked: { label: "需要处理", color: "rose" },
 };
+export const priorities = {
+  low: { label: "低", color: "blue" },
+  medium: { label: "中", color: "yellow" },
+  high: { label: "高", color: "orange" },
+  urgent: { label: "紧急", color: "rose" },
+} as const;
 export const repoName = (repo: string) =>
   repo.split(/[\\/]/).filter(Boolean).at(-1) || repo;
 export const artifactUrl = (

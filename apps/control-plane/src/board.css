@@ -396,6 +396,14 @@
 .board-dialog-wide {
   width: min(900px, calc(100vw - 32px));
 }
+.board-dialog-drawer {
+  width: min(608px, calc(100vw - 24px));
+  height: calc(100dvh - 24px);
+  margin-left: auto;
+  margin-right: 0;
+  border-radius: 24px;
+  box-shadow: var(--shadow-xl);
+}
 .board-dialog-content {
   display: flex;
   height: 100%;

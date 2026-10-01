@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Form, ModalOverlay, Modal, Dialog } from "react-aria-components";
 import {
-  RiAddLine,
   RiArrowLeftLine,
   RiGitMergeLine,
   RiChat3Line,
+  RiAddLine,
 } from "@remixicon/react";
 import { Button, ButtonLink } from "@/components/boardui/base/buttons/button";
 import { IconButton } from "@/components/boardui/base/buttons/icon-button";
@@ -25,37 +25,11 @@ import {
   type BoardSnapshot,
   type BoardAttempt,
 } from "../board";
-import { FoldAvatar, agentVisual } from "./FoldAvatar";
+import { icons } from "./Icon";
+import { Icon } from "./Icon";
 import { ScrollRegion } from "./ScrollRegion";
-import { Icon, icons } from "./Icon";
 import { cx } from "@/utils/cx";
-
-const columns = [
-  {
-    key: "todo",
-    title: "待办",
-    description: "Agent 会自动领取",
-    statuses: ["queued"],
-  },
-  {
-    key: "doing",
-    title: "执行中",
-    description: "独立开发，然后验证",
-    statuses: ["running", "verifying"],
-  },
-  {
-    key: "review",
-    title: "等你验收",
-    description: "查看报告，决定下一步",
-    statuses: ["review", "approved", "blocked"],
-  },
-  {
-    key: "done",
-    title: "已完成",
-    description: "你确认并合入的任务",
-    statuses: ["merged"],
-  },
-] as const;
+import { ProjectBoardWorkspace } from "./ProjectBoardWorkspace";
 
 function BoardDialog({
   title,
@@ -64,6 +38,7 @@ function BoardDialog({
   children,
   footer,
   wide = false,
+  drawer = false,
 }: {
   title: string;
   subtitle?: string;
@@ -71,6 +46,7 @@ function BoardDialog({
   children: ReactNode;
   footer?: ReactNode;
   wide?: boolean;
+  drawer?: boolean;
 }) {
   return (
     <ModalOverlay
@@ -81,7 +57,7 @@ function BoardDialog({
       }}
       className="board-overlay"
     >
-      <Modal className={cx("board-dialog", wide && "board-dialog-wide")}>
+      <Modal className={cx("board-dialog", wide && "board-dialog-wide", drawer && "board-dialog-drawer")}>
         <Dialog
           aria-label={title}
           className="board-dialog-content outline-none"
@@ -112,10 +88,12 @@ function NewTask({
   defaultRepo,
   onClose,
   onCreated,
+  autoStart = true,
 }: {
   defaultRepo: string;
   onClose: () => void;
   onCreated: (task: BoardTask) => void;
+  autoStart?: boolean;
 }) {
   const [repo, setRepo] = useState(() => {
     try {
@@ -140,6 +118,7 @@ function NewTask({
         description,
         acceptance,
         checkCommand,
+        autoStart,
       });
       try {
         localStorage.setItem("kumo-repo", repo);
@@ -355,6 +334,7 @@ function TaskDetail({
       subtitle={`${repoName(task.repo)} · ${task.targetBranch}`}
       onClose={onClose}
       wide
+      drawer
       footer={
         <>
           <span>
@@ -719,6 +699,7 @@ export function TaskBoard({ onDemo }: { onDemo: () => void }) {
   const [snapshot, setSnapshot] = useState<BoardSnapshot | null>(null);
   const [error, setError] = useState("");
   const [showNew, setShowNew] = useState(false);
+  const [newTaskAutoStart, setNewTaskAutoStart] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [dark, setDark] = useState(() => {
@@ -769,294 +750,14 @@ export function TaskBoard({ onDemo }: { onDemo: () => void }) {
     }
   }, [dark]);
   const tasks = snapshot?.tasks || [];
-  const visible = tasks.filter((task) =>
-    `${task.title} ${task.description} ${repoName(task.repo)}`
-      .toLowerCase()
-      .includes(search.toLowerCase()),
-  );
   const selected = tasks.find((task) => task.id === selectedId);
-  const active = tasks.find((task) =>
-    ["running", "verifying"].includes(task.status),
-  );
   return (
-    <div className="board-app">
-      <aside className="board-sidebar" aria-label="任务工作台导航">
-        <div className="board-brand">
-          <FoldAvatar
-            {...agentVisual("coordinator", 0)}
-            size={48}
-            mood={active ? "busy" : "idle"}
-            label="Kumo"
-          />
-          <div>
-            <strong>
-              kumo<span>.</span>
-            </strong>
-            <span>你的 Agent 工作台</span>
-          </div>
-        </div>
-        <span className="board-sidebar-label">工作空间</span>
-        <Button
-          leadingIcon={icons.grid}
-          variant="ghost"
-          className="board-nav-active"
-          aria-current="page"
-        >
-          任务看板<span className="board-nav-count">{tasks.length}</span>
-        </Button>
-        <Button
-          leadingIcon={icons.activity}
-          variant="secondary"
-          onClick={onDemo}
-        >
-          演示工作区
-          <Chip variant="caption" color="soft">
-            示例
-          </Chip>
-        </Button>
-        <div className="board-sidebar-note">
-          <FoldAvatar
-            {...agentVisual("worker", 0)}
-            size={40}
-            mood={active ? "busy" : "idle"}
-            label="开发 Agent"
-          />
-          <strong>{active ? "Agent 正在工作" : "准备好接收任务"}</strong>
-          <p>
-            {active ? active.title : "把需求加入待办，开发与验证会自动开始。"}
-          </p>
-          <span>
-            <span className="dot" />
-            {snapshot?.runner === "test-fixture"
-              ? "测试执行器 · 临时仓库"
-              : "本机 Codex · 顺序执行"}
-          </span>
-        </div>
-        <div className="board-sidebar-foot">
-          <span className="local-user">J</span>
-          <div>
-            <strong>由你验收和合入</strong>
-            <span>任务与报告保存在本机</span>
-          </div>
-          <IconButton
-            size="small"
-            icon={dark ? icons.sun : icons.moon}
-            onClick={() => setDark(!dark)}
-            aria-label={dark ? "切换浅色主题" : "切换深色主题"}
-          />
-        </div>
-      </aside>
-      <main className="board-main">
-        <div className="board-topbar">
-          <span>
-            <Icon name="grid" size={16} />
-            工作空间<span>/</span>
-            <strong>任务看板</strong>
-          </span>
-          <span
-            className={cx("board-api-status", error && "board-api-error")}
-            role="status"
-          >
-            <span className="dot" />
-            {error ? "连接异常" : snapshot ? "已连接" : "正在连接"}
-          </span>
-        </div>
-        <header className="board-page-heading">
-          <div>
-            <span className="board-eyebrow">想法 → 开发 → 验证 → 你的决定</span>
-            <h1>
-              把想法交给 Agent<span>.</span>
-            </h1>
-            <p>你安排任务，Agent 自动开发和验证。每一次合入，由你决定。</p>
-          </div>
-          <Button
-            leadingIcon={RiAddLine}
-            disabled={!snapshot}
-            onClick={() => setShowNew(true)}
-          >
-            新增任务
-          </Button>
-        </header>
-        <div className="board-overview">
-          <div>
-            <strong>
-              {
-                tasks.filter((task) =>
-                  ["queued", "running", "verifying"].includes(task.status),
-                ).length
-              }
-            </strong>
-            <span>待执行与进行中</span>
-          </div>
-          <div>
-            <strong>
-              {
-                tasks.filter((task) =>
-                  ["review", "approved", "blocked"].includes(task.status),
-                ).length
-              }
-            </strong>
-            <span>等待你的决定</span>
-          </div>
-          <div>
-            <strong>
-              {tasks.filter((task) => task.status === "merged").length}
-            </strong>
-            <span>已验收并合入</span>
-          </div>
-          <Input
-            size="small"
-            type="search"
-            leadingIcon={icons.search}
-            placeholder="搜索任务或仓库…"
-            aria-label="搜索任务"
-            value={search}
-            onChange={setSearch}
-          />
-        </div>
-        {error && (
-          <p role="alert" className="board-error">
-            {error}
-          </p>
-        )}
-        <div className="board-columns" aria-label="任务看板">
-          {columns.map((column) => {
-            const items = visible.filter((task) =>
-              (column.statuses as readonly string[]).includes(task.status),
-            );
-            return (
-              <section
-                key={column.key}
-                className={cx("board-column", `board-column-${column.key}`)}
-                aria-label={column.title}
-              >
-                <header>
-                  <div>
-                    <span className="board-column-dot" />
-                    <h2>{column.title}</h2>
-                    <span className="count-badge">{items.length}</span>
-                  </div>
-                  <p>{column.description}</p>
-                </header>
-                <ScrollRegion className="board-column-scroll">
-                  {items.map((task) => (
-                    <article key={task.id}>
-                      <Button
-                        variant="secondary"
-                        className="board-task-card"
-                        aria-label={`查看任务：${task.title}`}
-                        onClick={() => setSelectedId(task.id)}
-                      >
-                        <span className="board-task-content">
-                          <span className="board-task-meta">
-                            <span>任务 {task.id.slice(0, 6)}</span>
-                            <Chip
-                              variant="caption"
-                              color={boardStatus[task.status].color}
-                            >
-                              {boardStatus[task.status].label}
-                            </Chip>
-                          </span>
-                          <strong>{task.title}</strong>
-                          <span className="board-task-description">
-                            {task.description}
-                          </span>
-                          <span className="board-task-repo">
-                            <Icon name="branch" size={14} />
-                            {repoName(task.repo)}
-                            <span>{task.targetBranch}</span>
-                          </span>
-                          <span className="board-task-footer">
-                            <FoldAvatar
-                              {...agentVisual("worker", 0)}
-                              size={28}
-                              mood={
-                                task.status === "merged"
-                                  ? "happy"
-                                  : ["running", "verifying"].includes(
-                                        task.status,
-                                      )
-                                    ? "busy"
-                                    : "idle"
-                              }
-                              label="开发 Agent"
-                            />
-                            <span>
-                              {task.attempts.length
-                                ? `第 ${task.attempts.length} 次执行`
-                                : "等待 Agent 领取"}
-                            </span>
-                            {task.status === "approved" && (
-                              <span>你已验收</span>
-                            )}
-                          </span>
-                        </span>
-                      </Button>
-                    </article>
-                  ))}
-                  {items.length === 0 && (
-                    <div className="board-column-empty">
-                      <Icon
-                        name={
-                          column.key === "done"
-                            ? "check"
-                            : column.key === "review"
-                              ? "file"
-                              : column.key === "doing"
-                                ? "agents"
-                                : "grid"
-                        }
-                        size={24}
-                      />
-                      <strong>
-                        {column.key === "todo"
-                          ? search
-                            ? "没有匹配的待办"
-                            : "下一件想做的事"
-                          : column.key === "doing"
-                            ? "执行中的任务会在这里"
-                            : column.key === "review"
-                              ? "报告好了，等你来验收"
-                              : "完成的工作值得留一格"}
-                      </strong>
-                      <p>
-                        {column.key === "todo"
-                          ? "新增任务后，Agent 会自动开始。"
-                          : column.key === "doing"
-                            ? "你可以随时查看任务进度。"
-                            : column.key === "review"
-                              ? "验收、合入，或对话继续修改。"
-                              : "只有你确认合入，任务才算完成。"}
-                      </p>
-                      {column.key === "todo" && !search && (
-                        <Button
-                          size="small"
-                          variant="secondary"
-                          leadingIcon={RiAddLine}
-                          disabled={!snapshot}
-                          onClick={() => setShowNew(true)}
-                        >
-                          新增任务
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </ScrollRegion>
-              </section>
-            );
-          })}
-        </div>
-        <footer className="board-page-footer">
-          <span>
-            <Icon name="branch" size={14} />
-            独立工作区开发 · 完成后保留代码与报告
-          </span>
-          <span>没有任务会自动合入</span>
-        </footer>
-      </main>
+    <>
+      <ProjectBoardWorkspace snapshot={snapshot} error={error} search={search} onSearch={setSearch} dark={dark} onThemeChange={setDark} onDemo={onDemo} onCreate={(backlog) => { setNewTaskAutoStart(!backlog); setShowNew(true); }} onOpenTask={setSelectedId} onMove={async (id, status) => { try { await boardRequest(`/api/board/tasks/${id}/move`, { status }); await refresh(); } catch (reason) { setError((reason as Error).message); } }} />
       {showNew && snapshot && (
         <NewTask
           defaultRepo={snapshot.defaultRepo}
+          autoStart={newTaskAutoStart}
           onClose={() => setShowNew(false)}
           onCreated={(task) => {
             setShowNew(false);
@@ -1073,7 +774,7 @@ export function TaskBoard({ onDemo }: { onDemo: () => void }) {
           onRefresh={refresh}
         />
       )}
-    </div>
+    </>
   );
 }
 

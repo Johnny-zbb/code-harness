@@ -416,6 +416,9 @@ export async function createTaskBoard({
       const checkCommand =
         typeof input.checkCommand === "string" ? input.checkCommand.trim() : "";
       if (checkCommand.length > 2000) throw new BoardError("验证命令过长。");
+      const priority = input.priority ?? "medium";
+      if (!["low", "medium", "high", "urgent"].includes(priority))
+        throw new BoardError("优先级无效。");
       const created = await mutate(async () => {
         const repo = path.resolve(
           await git(path.resolve(requestedRepo), [
@@ -435,7 +438,8 @@ export async function createTaskBoard({
           targetBranch,
           baseSha,
           checkCommand,
-          status: "queued",
+          status: input.autoStart === false ? "backlog" : "queued",
+          priority,
           createdAt: now(),
           updatedAt: now(),
           messages: [{ role: "user", text: description, at: now() }],
@@ -447,6 +451,20 @@ export async function createTaskBoard({
       });
       schedule();
       return created;
+    },
+    async move(id, input) {
+      if (!["backlog", "queued"].includes(input.status))
+        throw new BoardError("只能在待规划和待办之间移动任务。", 409);
+      const task = await mutate(() => {
+        const current = find(id);
+        if (!["backlog", "queued"].includes(current.status) || current.attempts.length)
+          throw new BoardError("任务已开始执行，请通过验收或修改意见推进。", 409);
+        current.status = input.status;
+        current.updatedAt = now();
+        return current;
+      });
+      schedule();
+      return task;
     },
     async rework(id, input) {
       const feedback = text(input.text, "修改意见");

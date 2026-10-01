@@ -196,7 +196,7 @@ function createHandler(options, board) {
         if (pathname === "/api/board/tasks" && req.method === "POST")
           return json(res, 201, await board.create(await readBody(req)));
         const action = pathname.match(
-          /^\/api\/board\/tasks\/([a-f0-9-]+)\/(rework|approve|merge)$/,
+          /^\/api\/board\/tasks\/([a-f0-9-]+)\/(rework|approve|merge|move)$/,
         );
         if (action && req.method === "POST") {
           const input = await readBody(req);

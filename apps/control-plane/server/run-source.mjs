@@ -46,7 +46,7 @@ export function evidenceTypeFor(filename) {
 export function finalTaskStatus(manifestTask) {
   if (manifestTask?.status === 'passed') return 'passed';
   if (
-    ['worker-failed', 'verification-failed', 'check-failed', 'orchestrator-failed'].includes(
+    ['worker-failed', 'verification-failed', 'verification-blocked', 'check-failed', 'orchestrator-failed'].includes(
       manifestTask?.status,
     )
   ) {

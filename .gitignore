@@ -1,5 +1,7 @@
 node_modules/
+.cache/
 dist/
 *.log
 .code-harness-runs/
 .code-harness-worktrees/
+.code-harness-board/

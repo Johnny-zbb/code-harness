@@ -11,6 +11,7 @@ export interface ChatMessage {
   taskId: string | null;
   agent: HarnessAgent;
   text: string;
+  ts?: string;
 }
 
 export interface TaskState {
@@ -87,7 +88,7 @@ export function applyEvent(state: RunState, event: HarnessEvent): RunState {
         ...state,
         messages: [
           ...state.messages,
-          { id: state.messages.length, taskId: event.taskId ?? null, agent: event.agent, text: event.text },
+          { id: state.messages.length, taskId: event.taskId ?? null, agent: event.agent, text: event.text, ts: event.ts },
         ],
       };
     case 'agent.status': {
@@ -98,10 +99,14 @@ export function applyEvent(state: RunState, event: HarnessEvent): RunState {
     case 'evidence.created': {
       const task = state.tasks[event.taskId];
       if (!task) return state;
-      const exists = task.evidence.some(
-        (item) => item.path === event.path && item.evidenceType === event.evidenceType,
+      const existingIndex = task.evidence.findIndex(
+        (item) => item.path === event.path && item.evidenceType === event.evidenceType && (Boolean(event.path) || item.label === event.label),
       );
-      if (exists) return state;
+      if (existingIndex >= 0) {
+        if (!event.label || task.evidence[existingIndex].label === event.label) return state;
+        const evidence = task.evidence.map((item, index) => index === existingIndex ? { ...item, label: event.label } : item);
+        return { ...state, tasks: { ...state.tasks, [event.taskId]: { ...task, evidence } } };
+      }
       const next: TaskState = {
         ...task,
         evidence: [...task.evidence, { evidenceType: event.evidenceType, path: event.path, label: event.label }],
@@ -129,6 +134,7 @@ export interface AgentRow {
   agentRole: 'coordinator' | 'worker' | 'verifier';
   /** Worker/verifier ordinal (0-based) used to derive a stable avatar identity. */
   agentIndex: number;
+  taskId?: string;
 }
 
 export function workerName(index: number): string {
@@ -201,16 +207,19 @@ export function deriveAgentRows(state: RunState): AgentRow[] {
       tone: taskTone(task.status),
       agentRole: 'worker',
       agentIndex: index,
+      taskId,
     });
-    if (task.status === 'verifying' || task.status === 'passed' || task.status === 'failed') {
+    const hasVerifierActivity = state.messages.some((message) => message.taskId === taskId && message.agent === 'verifier');
+    if (hasVerifierActivity || task.status === 'verifying' || task.status === 'passed' || task.status === 'failed') {
       rows.push({
         key: `verifier-${taskId}`,
         name: `Verifier ${String.fromCharCode(65 + index)}`,
         role: 'Independent verify',
-        statusLabel: task.status === 'verifying' ? 'Checking' : task.status === 'passed' ? 'Passed' : 'Failed',
-        tone: task.status === 'verifying' ? 'busy' : task.status === 'passed' ? 'passed' : 'failed',
+        statusLabel: task.status === 'verifying' ? 'Checking' : task.status === 'passed' ? 'Passed' : task.status === 'failed' ? 'Failed' : 'Waiting',
+        tone: task.status === 'verifying' ? 'busy' : task.status === 'passed' ? 'passed' : task.status === 'failed' ? 'failed' : 'idle',
         agentRole: 'verifier',
         agentIndex: index,
+        taskId,
       });
     }
   });

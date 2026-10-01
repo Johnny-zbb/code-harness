@@ -64,6 +64,8 @@ node skills/multi-agent-orchestrator/orchestrate.mjs run \
   --max-parallel 2
 ```
 
+Add `--require-report` for version-bound acceptance. The kernel commits the worker result locally, records its SHA, and asks the verifier to write a structured JSON verdict with concrete checks. It removes the temporary worktree report, saves `verification-report.json` as evidence, and rejects missing reports, failed/blocked checks, nonzero verifier exits, and implementation changes during or after verification. This mode requires a verifier command.
+
 The worker and verifier prompts are sent on stdin. The CLI also exposes prompt-file and evidence paths through environment variables so an adapter can ignore stdin if necessary.
 
 ## Codex adapter
@@ -104,10 +106,13 @@ Each task keeps:
 - `git-status.txt`
 - `git-diff-stat.txt`
 - `git-diff.patch`
+- `verification-report.json` when `--require-report` is used
 
 The run root keeps `plan.json` and `run.json`.
 
 Evidence is stored outside the target checkout under a sibling `.code-harness-runs/<repo>/<run-id>/` directory. Worktrees live under `.code-harness-worktrees/<repo>/<run-id>/`.
+
+`--runs-dir` and `--worktrees-dir` override those roots. The exported `runPlan` API additionally supports direct process commands, cancellation, and phase/process callbacks. A plan task may reuse a harness-owned `worktree` with its expected `branch` for feedback iterations; its repository and branch are validated before dispatch.
 
 ## Coordinator behavior
 
@@ -118,3 +123,5 @@ The coordinator must not invent parallelism. If the split is ambiguous, choose o
 ## Integration boundary
 
 This is the execution kernel for the control-plane UI (`apps/control-plane`). UI concerns such as agent cards, chat streams, approvals, and marketplace configuration stay outside this skill. The UI should consume `run.json` and JSONL agent events rather than own orchestration semantics.
+
+The board's server layer persists tasks, queues one worker at a time, requires independent reports, and binds approval to a commit. Human-confirmed merge uses `--ff-only` in the clean target checkout. Feedback requeues the same task worktree, preserving all attempts and requiring a new verification report.

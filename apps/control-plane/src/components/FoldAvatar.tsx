@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'preact/hooks';
+import { useEffect, useRef } from "react";
 
 /**
  * Canvas-drawn "fold" avatars in the BoardUI spirit: a soft geometric blob
@@ -9,45 +9,43 @@ import { useEffect, useRef } from 'preact/hooks';
  * agents smile (arc eyes), failed ones frown. Respects reduced motion.
  */
 
-export type FoldMood = 'idle' | 'busy' | 'happy' | 'sad';
-export type FoldShape = 'blob' | 'diamond' | 'shield' | 'flower' | 'circle';
-
-const EYE_COLOR = '#21242b';
+export type FoldMood = "idle" | "busy" | "happy" | "sad";
+export type FoldShape = "blob" | "diamond" | "shield" | "flower" | "circle";
 
 export function agentVisual(
-  agent: 'coordinator' | 'worker' | 'verifier' | 'user',
+  agent: "coordinator" | "worker" | "verifier" | "user",
   index: number,
 ): { color: string; shape: FoldShape } {
-  if (agent === 'coordinator') return { color: '#ffd43b', shape: 'shield' };
-  if (agent === 'user') return { color: '#ced4da', shape: 'circle' };
-  if (agent === 'verifier') return { color: '#b197fc', shape: 'flower' };
+  if (agent === "coordinator")
+    return { color: "var(--color-status-yellow-background)", shape: "shield" };
+  if (agent === "user")
+    return {
+      color: "var(--color-background-tertiary-default)",
+      shape: "circle",
+    };
+  if (agent === "verifier")
+    return { color: "var(--color-status-purple-background)", shape: "flower" };
   const workers = [
-    { color: '#74c0fc', shape: 'blob' as const },
-    { color: '#63e6be', shape: 'diamond' as const },
-    { color: '#ffa8a8', shape: 'circle' as const },
+    { color: "var(--color-status-blue-background)", shape: "blob" as const },
+    { color: "var(--color-status-cyan-background)", shape: "diamond" as const },
+    { color: "var(--color-status-rose-background)", shape: "circle" as const },
   ];
   return workers[Math.max(0, index) % workers.length];
 }
 
-export function moodFromTone(tone: 'idle' | 'busy' | 'passed' | 'failed'): FoldMood {
-  if (tone === 'passed') return 'happy';
-  if (tone === 'failed') return 'sad';
+export function moodFromTone(
+  tone: "idle" | "busy" | "passed" | "failed",
+): FoldMood {
+  if (tone === "passed") return "happy";
+  if (tone === "failed") return "sad";
   return tone;
 }
 
-function shade(hex: string, amount: number): string {
-  const raw = hex.replace('#', '');
-  const full = raw.length === 3 ? raw.split('').map((c) => c + c).join('') : raw;
-  const num = parseInt(full, 16);
-  const channel = (shift: number) => {
-    const value = (num >> shift) & 255;
-    const target = amount < 0 ? 0 : 255;
-    return Math.round((target - value) * Math.abs(amount) + value);
-  };
-  return `rgb(${channel(16)}, ${channel(8)}, ${channel(0)})`;
-}
-
-function roundedPolygon(path: Path2D, points: [number, number][], radius: number): void {
+function roundedPolygon(
+  path: Path2D,
+  points: [number, number][],
+  radius: number,
+): void {
   const count = points.length;
   for (let i = 0; i < count; i += 1) {
     const [px, py] = points[(i + count - 1) % count];
@@ -69,19 +67,56 @@ function roundedPolygon(path: Path2D, points: [number, number][], radius: number
 function buildShape(shape: FoldShape): { body: Path2D; fold?: Path2D } {
   const body = new Path2D();
   switch (shape) {
-    case 'blob': {
-      roundedPolygon(body, [[12, 12], [60, 12], [88, 40], [88, 88], [12, 88]], 17);
+    case "blob": {
+      roundedPolygon(
+        body,
+        [
+          [12, 12],
+          [60, 12],
+          [88, 40],
+          [88, 88],
+          [12, 88],
+        ],
+        17,
+      );
       const fold = new Path2D();
-      roundedPolygon(fold, [[60, 12], [88, 40], [60, 40]], 5);
+      roundedPolygon(
+        fold,
+        [
+          [60, 12],
+          [88, 40],
+          [60, 40],
+        ],
+        5,
+      );
       return { body, fold };
     }
-    case 'diamond':
-      roundedPolygon(body, [[50, 6], [94, 50], [50, 94], [6, 50]], 15);
+    case "diamond":
+      roundedPolygon(
+        body,
+        [
+          [50, 6],
+          [94, 50],
+          [50, 94],
+          [6, 50],
+        ],
+        15,
+      );
       return { body };
-    case 'shield':
-      roundedPolygon(body, [[20, 10], [80, 10], [80, 50], [50, 90], [20, 50]], 13);
+    case "shield":
+      roundedPolygon(
+        body,
+        [
+          [20, 10],
+          [80, 10],
+          [80, 50],
+          [50, 90],
+          [20, 50],
+        ],
+        13,
+      );
       return { body };
-    case 'flower': {
+    case "flower": {
       for (let i = 0; i < 6; i += 1) {
         const angle = (Math.PI / 3) * i - Math.PI / 2;
         const cx = 50 + Math.cos(angle) * 20;
@@ -93,7 +128,7 @@ function buildShape(shape: FoldShape): { body: Path2D; fold?: Path2D } {
       body.arc(50, 50, 24, 0, Math.PI * 2);
       return { body };
     }
-    case 'circle':
+    case "circle":
     default:
       body.moveTo(90, 50);
       body.arc(50, 50, 40, 0, Math.PI * 2);
@@ -109,13 +144,19 @@ export interface FoldAvatarProps {
   label?: string;
 }
 
-export function FoldAvatar({ color, shape = 'blob', size = 34, mood = 'busy', label }: FoldAvatarProps) {
+export function FoldAvatar({
+  color,
+  shape = "blob",
+  size = 34,
+  mood = "busy",
+  label,
+}: FoldAvatarProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -126,13 +167,27 @@ export function FoldAvatar({ color, shape = 'blob', size = 34, mood = 'busy', la
     ctx.setTransform(dpr * scale, 0, 0, dpr * scale, inset, inset);
 
     const { body, fold } = buildShape(shape);
-    const foldFill = shade(color, -0.24);
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let bodyFill = "";
+    let eyeColor = "";
+    const resolveColors = () => {
+      const styles = getComputedStyle(canvas);
+      bodyFill = styles.color;
+      eyeColor = styles
+        .getPropertyValue("--color-foreground-icon-primary")
+        .trim();
+    };
+    resolveColors();
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
 
     // Eye state: a shared gaze target per face, plus a blink phase machine.
     const gaze = { x: 0, y: 0, targetX: 0, targetY: 0 };
-    const wanderRange = mood === 'busy' ? { x: 8, y: 6 } : { x: 4, y: 3 };
-    const wanderInterval = () => (mood === 'busy' ? 900 + Math.random() * 1100 : 1800 + Math.random() * 2200);
+    const wanderRange = mood === "busy" ? { x: 8, y: 6 } : { x: 4, y: 3 };
+    const wanderInterval = () =>
+      mood === "busy"
+        ? 900 + Math.random() * 1100
+        : 1800 + Math.random() * 2200;
     let nextWander = 0;
     let blink = 0;
     let blinking = false;
@@ -142,14 +197,15 @@ export function FoldAvatar({ color, shape = 'blob', size = 34, mood = 'busy', la
     const drawEyes = () => {
       ctx.save();
       ctx.clip(body); // eyes never spill onto the fold or past the silhouette
-      ctx.fillStyle = EYE_COLOR;
-      ctx.strokeStyle = EYE_COLOR;
-      if (mood === 'happy' || mood === 'sad') {
+      ctx.fillStyle = eyeColor;
+      ctx.strokeStyle = eyeColor;
+      if (mood === "happy" || mood === "sad") {
         ctx.lineWidth = 3.4;
-        ctx.lineCap = 'round';
+        ctx.lineCap = "round";
         for (const ex of [39, 61]) {
           ctx.beginPath();
-          if (mood === 'happy') ctx.arc(ex + gaze.x, 47 + gaze.y, 5.6, Math.PI, Math.PI * 2);
+          if (mood === "happy")
+            ctx.arc(ex + gaze.x, 47 + gaze.y, 5.6, Math.PI, Math.PI * 2);
           else ctx.arc(ex + gaze.x, 41 + gaze.y, 5.6, 0, Math.PI);
           ctx.stroke();
         }
@@ -163,8 +219,20 @@ export function FoldAvatar({ color, shape = 'blob', size = 34, mood = 'busy', la
         const y = 45 + gaze.y - eyeHeight / 2;
         ctx.beginPath();
         ctx.moveTo(x + width / 2, y);
-        ctx.arcTo(x + width, y, x + width, y + eyeHeight, Math.min(width, eyeHeight) / 2);
-        ctx.arcTo(x + width, y + eyeHeight, x, y + eyeHeight, Math.min(width, eyeHeight) / 2);
+        ctx.arcTo(
+          x + width,
+          y,
+          x + width,
+          y + eyeHeight,
+          Math.min(width, eyeHeight) / 2,
+        );
+        ctx.arcTo(
+          x + width,
+          y + eyeHeight,
+          x,
+          y + eyeHeight,
+          Math.min(width, eyeHeight) / 2,
+        );
         ctx.arcTo(x, y + eyeHeight, x, y, Math.min(width, eyeHeight) / 2);
         ctx.arcTo(x, y, x + width, y, Math.min(width, eyeHeight) / 2);
         ctx.closePath();
@@ -178,18 +246,30 @@ export function FoldAvatar({ color, shape = 'blob', size = 34, mood = 'busy', la
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.restore();
-      ctx.fillStyle = color;
+      ctx.fillStyle = bodyFill;
       ctx.fill(body);
       if (fold) {
-        ctx.fillStyle = foldFill;
+        ctx.save();
+        ctx.fillStyle = eyeColor;
+        ctx.globalAlpha = 0.16;
         ctx.fill(fold);
+        ctx.restore();
       }
       drawEyes();
     };
 
+    const themeObserver = new MutationObserver(() => {
+      resolveColors();
+      draw();
+    });
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
     if (reducedMotion) {
       draw();
-      return;
+      return () => themeObserver.disconnect();
     }
 
     let raf = 0;
@@ -227,16 +307,19 @@ export function FoldAvatar({ color, shape = 'blob', size = 34, mood = 'busy', la
     };
 
     raf = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      themeObserver.disconnect();
+    };
   }, [color, shape, size, mood]);
 
   return (
     <canvas
-      class="fold-avatar"
+      className="fold-avatar"
       ref={canvasRef}
-      style={{ width: `${size}px`, height: `${size}px` }}
+      style={{ color, width: `${size}px`, height: `${size}px` }}
       role="img"
-      aria-label={label ?? 'agent avatar'}
+      aria-label={label ?? "agent avatar"}
     />
   );
 }

@@ -44,18 +44,22 @@ node skills/multi-agent-orchestrator/adapters/codex.mjs run \
 
 The adapter preserves Codex JSONL events beside the normal pstack-style evidence, which makes the execution state consumable by the control-plane UI (`apps/control-plane`).
 
-It intentionally stops before automatic branch integration. The first goal is to make parallel work observable and trustworthy before adding more autonomy.
+The execution kernel keeps task branches separate. The control-plane board adds persistent queuing, version-bound verification reports, conversational rework, and explicitly confirmed local integration.
 
 ### control-plane UI
 
-A thin BoardUI-style console over the orchestrator. The UI owns no orchestration logic: it renders a unified `HarnessEvent` stream (SSE) that a zero-dependency local server adapts from `run.json`, `worker-events.jsonl`, and `verifier-events.jsonl`.
+A React 19 + Tailwind CSS 4 task board using installed BoardUI components. Add a todo and Codex develops automatically in an isolated worktree, then independently verifies it. Review the report, send feedback to continue the same task, or approve and explicitly merge the verified version. The local Node service persists tasks and review history. It runs one task at a time and never pushes or merges without your decision.
 
 ```bash
 cd apps/control-plane
 npm install
-npm run dev       # scripted demo run + Vite dev server
-npm run dev:server:live -- --runs-dir /path/to/.code-harness-runs   # real runs
+codex login       # once, if needed
+npm run dev       # automatic Codex task board + Vite dev server
+npm run build
+npm start         # built UI and API on http://127.0.0.1:8787
 ```
+
+See [the task board README](apps/control-plane/README.md) for the workflow, API, and reproducible temporary-repository browser driver. The earlier event viewer remains available as a separate demo workspace.
 
 ## Philosophy
 

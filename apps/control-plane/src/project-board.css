@@ -1,0 +1,85 @@
+@reference './styles/globals.css';
+
+@layer components {
+  .project-app { @apply flex min-h-screen gap-3 bg-background-full p-3 text-text-primary; }
+  .project-sidebar { @apply flex w-[260px] shrink-0 flex-col gap-3 p-3; height: calc(100vh - 24px); }
+  .project-sidebar-collapsed { @apply w-[60px] items-center; }
+  .project-sidebar-profile, .project-sidebar-account { @apply flex min-w-0 items-center gap-2; }
+  .project-sidebar-profile { @apply justify-between; }
+  .project-sidebar-name, .project-sidebar-account > div { @apply flex min-w-0 flex-1 flex-col; }
+  .project-sidebar-search input { @apply h-9; }
+  .project-sidebar-scroll { @apply min-h-0 flex-1; }
+  .project-sidebar-nav { @apply flex flex-col gap-1; }
+  .project-sidebar-nav nav { @apply flex flex-col gap-1; }
+  .project-nav-item { @apply w-full justify-start gap-2 rounded-2xl px-3 py-2 text-text-secondary; }
+  .project-nav-item > span:nth-child(2) { @apply ms-auto; }
+  .project-nav-selected { @apply bg-linear-to-b from-accent-500 to-accent-600 text-white shadow-nav-selected; }
+  .project-nav-selected svg { @apply text-white; }
+  .project-nav-count { @apply rounded-full bg-background-tertiary-default px-2 py-0.5 text-caption-1-medium text-text-tertiary; }
+  .project-nav-selected .project-nav-count { @apply bg-accent-400 text-white; }
+  .project-sidebar-repo { @apply mt-3 flex flex-col gap-2 rounded-2xl bg-background-tertiary-default p-3; }
+  .project-sidebar-repo > div { @apply flex items-center gap-1.5 truncate text-text-secondary; }
+  .project-sidebar-bottom { @apply flex flex-col gap-3; }
+  .project-sidebar-bottom [data-rac] { @apply min-w-0; }
+  .project-sidebar-account { @apply rounded-2xl bg-background-tertiary-default p-2; }
+
+  .project-main { @apply flex min-w-0 flex-1 flex-col overflow-hidden; }
+  .project-breadcrumb { @apply flex h-9 items-center gap-1.5 px-2 text-text-tertiary; }
+  .project-header { @apply flex items-center justify-between gap-4 px-2 pb-4 pt-3; }
+  .project-header h1 { @apply truncate; }
+  .project-toolbar { @apply flex shrink-0 items-center gap-1; }
+  .project-tool { @apply inline-flex size-9 items-center justify-center rounded-xl text-foreground-icon-secondary hover:bg-background-secondary-hover; }
+  .project-tool-active { @apply bg-background-tertiary-default text-foreground-icon-primary; }
+  .project-toolbar-divider { @apply mx-1 h-5 w-px bg-separator-border; }
+  .project-notification { @apply relative; }
+  .project-notification-count { @apply pointer-events-none absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-status-rose-background text-caption-1-medium text-status-rose-text; }
+  .project-fixture-notice { @apply mx-2 mb-2 rounded-xl bg-background-tertiary-default px-3 py-2 text-text-secondary; }
+  .project-filter-summary { @apply mx-2 mb-2 flex items-center justify-between rounded-xl border border-border-button-default bg-background-primary-default px-3 py-1.5 text-text-secondary; }
+
+  .project-columns { @apply flex min-h-0 flex-1 gap-2 overflow-x-auto px-2 pb-2; }
+  .project-column { @apply flex min-h-0 w-[274px] min-w-[274px] flex-col rounded-3xl bg-background-secondary-default p-2 transition-[box-shadow,background-color] duration-200; }
+  .project-column-drop { @apply bg-accent-50 ring-2 ring-inset ring-accent-300; }
+  .project-column-header { @apply flex items-center justify-between gap-2 px-2 pb-2 pt-1; }
+  .project-column-header h2 { @apply flex items-center gap-2; }
+  .project-column-header h2 > span { @apply rounded-full bg-background-tertiary-default px-1.5 py-0.5 text-text-tertiary; }
+  .project-column-header > div { @apply flex items-center gap-0.5; }
+  .project-column-region { @apply min-h-0 flex-1; }
+  .project-column-scroll { @apply flex min-h-full flex-col gap-2 overflow-y-auto px-0.5 pb-1; }
+  .project-card { @apply flex w-full cursor-pointer flex-col gap-2 rounded-2xl border border-border-button-default bg-background-primary-default p-3 text-left shadow-xs transition-[box-shadow,transform,border-color] duration-150 hover:-translate-y-px hover:border-border-button-hover hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus-ring; }
+  .project-columns-compact .project-card { @apply gap-1.5 p-2.5; }
+  .project-card-top, .project-card-bottom, .project-card-labels { @apply flex items-center justify-between gap-2; }
+  .project-card-reference { @apply flex min-w-0 items-center gap-0.5 truncate text-text-tertiary; }
+  .project-card-reference > span { @apply truncate; }
+  .project-assignees { @apply flex shrink-0 -space-x-1; }
+  .project-assignees > span { @apply ring-2 ring-background-primary-default; }
+  .project-card-labels { @apply justify-start; }
+  .project-repo-chip { @apply flex min-w-0 items-center gap-1 truncate rounded-md border border-border-button-default px-1.5 py-1 text-text-tertiary; }
+  .project-card h3 { @apply line-clamp-2 text-text-primary; }
+  .project-card-bottom { @apply text-text-tertiary; }
+  .project-card-status { @apply flex items-center gap-1 text-text-secondary; }
+  .project-status-dot { @apply size-1.5 rounded-full bg-status-yellow-background; }
+  .project-status-live { @apply animate-pulse bg-status-blue-background; }
+  .project-empty { @apply flex flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-border-button-default px-3 py-8 text-center text-text-tertiary; }
+  .project-empty svg { @apply mb-1 text-foreground-icon-quaternary; }
+  .project-empty p { @apply mb-2; }
+  .project-footer { @apply flex items-center gap-2 px-2 pt-1 text-text-tertiary; }
+  .project-footer > span:last-child { @apply ms-auto; }
+  .project-connection-dot { @apply size-1.5 rounded-full bg-status-lime-background; }
+}
+
+@media (max-width: 900px) {
+  .project-app { @apply gap-2 p-2; }
+  .project-sidebar { @apply w-[60px] px-2; }
+  .project-sidebar-name, .project-sidebar-search input, .project-nav-item > span, .project-sidebar-repo, .project-sidebar-account > div, .project-sidebar-bottom [data-rac] { @apply hidden; }
+  .project-sidebar-search { @apply flex justify-center; }
+  .project-nav-item { @apply justify-center px-2; }
+  .project-sidebar-profile { @apply flex-col; }
+  .project-sidebar-bottom { @apply items-center; }
+}
+@media (max-width: 650px) {
+  .project-header { @apply flex-col items-start; }
+  .project-toolbar { @apply w-full justify-between; }
+  .project-columns { @apply pb-1; }
+  .project-column { @apply w-[calc(100vw-88px)] min-w-[calc(100vw-88px)]; }
+  .project-footer { @apply hidden; }
+}
